@@ -23,14 +23,18 @@ public class CommentRepository {
     }
 
     public void create(Comment comment) {
-        String query = "insert into comments(movieId, userId, comment) values (" + comment.getMovieId() + ", " + comment.getUserId() + ", '" + comment.getComment() + "')";
+        String query = "insert into comments(movieId, userId, comment) values (?, ?, ?)";
 
         try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
+             PreparedStatement statement = connection.prepareStatement(query);
         ) {
-            statement.execute(query);
+            statement.setInt(1, comment.getMovieId());
+            statement.setInt(2, comment.getUserId());
+            statement.setString(3, comment.getComment());
+            statement.execute();
+            LOG.info("Comment successfully added by: userId - " + comment.getUserId());
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Unsuccessful comment creation; SQL exception happened: " + e);
         }
     }
 
@@ -43,8 +47,9 @@ public class CommentRepository {
             while (rs.next()) {
                 commentList.add(new Comment(rs.getInt(1), rs.getInt(2), rs.getString(3)));
             }
+            LOG.info("Comments successfully loaded.");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Unsuccessful comment load; SQL exception happened: " + e);
         }
         return commentList;
     }

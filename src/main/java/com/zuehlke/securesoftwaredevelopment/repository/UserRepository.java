@@ -1,5 +1,7 @@
 package com.zuehlke.securesoftwaredevelopment.repository;
 
+import com.zuehlke.securesoftwaredevelopment.config.AuditLogger;
+import com.zuehlke.securesoftwaredevelopment.config.Entity;
 import com.zuehlke.securesoftwaredevelopment.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +33,11 @@ public class UserRepository {
                 int id = rs.getInt(1);
                 String username1 = rs.getString(2);
                 String password = rs.getString(3);
+                LOG.info("User successfully found by username: " + username);
                 return new User(id, username1, password);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("User unsuccessfully found by username: " + username + " due to SQL exception: " + e);
         }
         return null;
     }
@@ -46,7 +49,7 @@ public class UserRepository {
              ResultSet rs = statement.executeQuery(query)) {
             return rs.next();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.info("Invalid credidentials.");
         }
         return false;
     }
@@ -57,8 +60,16 @@ public class UserRepository {
              Statement statement = connection.createStatement();
         ) {
             statement.executeUpdate(query);
+            AuditLogger.
+                    getAuditLogger(PersonRepository.class)
+                    .auditChange(new Entity(
+                            "person.delete",
+                            String.valueOf(userId),
+                            "existing person with id: " + userId,
+                            "person no longer exists in the database"
+                    ));
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("User delete unsuccessful due to SQL exception: " + e);;
         }
     }
 }

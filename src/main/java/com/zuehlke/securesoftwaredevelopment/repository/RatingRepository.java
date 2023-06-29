@@ -1,5 +1,7 @@
 package com.zuehlke.securesoftwaredevelopment.repository;
 
+import com.zuehlke.securesoftwaredevelopment.config.AuditLogger;
+import com.zuehlke.securesoftwaredevelopment.config.Entity;
 import com.zuehlke.securesoftwaredevelopment.domain.Comment;
 import com.zuehlke.securesoftwaredevelopment.domain.Rating;
 import org.slf4j.Logger;
@@ -15,7 +17,7 @@ import java.util.List;
 public class RatingRepository {
 
     private static final Logger LOG = LoggerFactory.getLogger(RatingRepository.class);
-
+    private static final AuditLogger auditLogger = AuditLogger.getAuditLogger(PersonRepository.class);
 
     private DataSource dataSource;
 
@@ -38,15 +40,25 @@ public class RatingRepository {
                 preparedStatement.setInt(2, rating.getMovieId());
                 preparedStatement.setInt(3, rating.getUserId());
                 preparedStatement.executeUpdate();
+                LOG.info("Rating for movie id: " + rating.getMovieId() + " successfully updated to rating score of: " + rating.getRating());
             } else {
                 PreparedStatement preparedStatement = connection.prepareStatement(query3);
                 preparedStatement.setInt(1, rating.getMovieId());
                 preparedStatement.setInt(2, rating.getUserId());
                 preparedStatement.setInt(3, rating.getRating());
                 preparedStatement.executeUpdate();
+                AuditLogger.
+                        getAuditLogger(RatingRepository.class)
+                        .auditChange(new Entity(
+                                "rating.create",
+                                String.valueOf(rating.getMovieId()) + " - " + String.valueOf(rating.getUserId()),
+                                "---",
+                                String.valueOf(rating.getRating())
+
+                        ));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Rating update or create unsuccessful due to SQL exception: " + e);
         }
     }
 
@@ -59,8 +71,9 @@ public class RatingRepository {
             while (rs.next()) {
                 ratingList.add(new Rating(rs.getInt(1), rs.getInt(2), rs.getInt(3)));
             }
+            LOG.info("Get all ratings successful");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Get all ratings unsuccessful due to SQL exception: " + e);
         }
         return ratingList;
     }

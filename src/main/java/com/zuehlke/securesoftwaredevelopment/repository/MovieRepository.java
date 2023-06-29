@@ -36,13 +36,14 @@ public class MovieRepository {
                 Movie movie = createMovieFromResultSet(rs);
                 movieList.add(movie);
             }
+            LOG.info("Movies successfully loaded.");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Unsuccessful movie load; SQL exception happened: " + e);
         }
         return movieList;
     }
 
-    public List<Movie> search(String searchTerm) throws SQLException {
+    public List<Movie> search(String searchTerm) {
         List<Movie> movieList = new ArrayList<>();
         String query = "SELECT DISTINCT m.id, m.title, m.description FROM movies m, movies_to_genres mg, genres g" +
                 " WHERE m.id = mg.movieId" +
@@ -55,6 +56,9 @@ public class MovieRepository {
             while (rs.next()) {
                 movieList.add(createMovieFromResultSet(rs));
             }
+            LOG.info("Movies search was successful.");
+        }catch (SQLException e) {
+            LOG.warn("Unsuccessful movie search; SQL exception happened: " + e);
         }
         return movieList;
     }
@@ -80,10 +84,12 @@ public class MovieRepository {
                     movieGenres.add(genre);
                 }
                 movie.setGenres(movieGenres);
+                LOG.info("Getting a singular movie with id: " + movieId + " was successful.");
                 return movie;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Getting a singular movie with id: " + movieId + " was unsuccessful. " +
+                    "Due to SQL exception: " + e);
         }
 
         return null;
@@ -98,6 +104,7 @@ public class MovieRepository {
             statement.setString(1, movie.getTitle());
             statement.setString(2, movie.getDescription());
             statement.executeUpdate();
+            LOG.info("New movie successfully created with name: " + movie.getTitle());
             ResultSet generatedKeys = statement.getGeneratedKeys();
             if (generatedKeys.next()) {
                 id = generatedKeys.getLong(1);
@@ -108,14 +115,16 @@ public class MovieRepository {
                     ) {
                         statement2.setInt(1, (int) finalId);
                         statement2.setInt(2, genre.getId());
+                        LOG.info("New movie successfully created with adequate genre in the database with genre id: " + genre.getId());
                         statement2.executeUpdate();
                     } catch (SQLException e) {
-                        e.printStackTrace();
+                        LOG.warn("Unsuccessfully added movie id to the adequate genre id with genre id: " + genre.getId()
+                        + " and movie id: " + finalId + " . Due to SQL exception: " + e);
                     }
                 });
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Movie creation unsuccessful due to SQL exception: " + e);
         }
         return id;
     }
@@ -132,8 +141,9 @@ public class MovieRepository {
             statement.executeUpdate(query2);
             statement.executeUpdate(query3);
             statement.executeUpdate(query4);
+            LOG.info("Movie successfully deleted with cascade; movie id: " + movieId);
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Movie unsuccessfully deleted with cascade; movie id: " + movieId);
         }
     }
 

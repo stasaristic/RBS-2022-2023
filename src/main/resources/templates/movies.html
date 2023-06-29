@@ -36,11 +36,11 @@
         <td th:text="${movie.id}"></td>
         <td th:text="${movie.title}"></td>
         <td th:text="${movie.description}"></td>
-        <td><a th:href="@{/movies(id=${movie.id})}">Details</a></td>
+        <td><a th:href="@{/movies(id=${movie.id})}" sec:authorize="hasAuthority('VIEW_MOVIES_LIST')">Details</a></td>
       </tr>
       </tbody>
     </table>
-    <a href="/create-form">Add movie</a>
+    <a href="/create-form" sec:authorize="hasAuthority('CREATE_MOVIE')">Add movie</a>
   </div>
   <template id="row-template">
     <tr>
@@ -74,7 +74,7 @@
 
     function updateSearchTerm(searchQuery) {
       const searchTerm = document.getElementById('searchTerm');
-      searchTerm.innerHTML = searchQuery;
+      searchTerm.textContent = searchQuery;
       searchTerm.parentElement.classList.remove('invisible');
     }
 

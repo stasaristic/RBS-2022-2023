@@ -1,5 +1,7 @@
 package com.zuehlke.securesoftwaredevelopment.repository;
 
+import com.zuehlke.securesoftwaredevelopment.config.AuditLogger;
+import com.zuehlke.securesoftwaredevelopment.config.Entity;
 import com.zuehlke.securesoftwaredevelopment.domain.HashedUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +33,9 @@ public class HashedUserRepository {
                 String totpKey = rs.getString(3);
                 return new HashedUser(username, passwordHash, salt, totpKey);
             }
+            LOG.info("Hashed user successfully selected where username is: " + username);
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Hashed user unsuccessfully selected where username is: " + username + " due to: " + e);
         }
         return null;
     }
@@ -46,7 +49,7 @@ public class HashedUserRepository {
 
             statement.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Hashed user unsuccessfully updated toptKey due to SQL exception: " + e + " where username is: " + username);
         }
     }
 }

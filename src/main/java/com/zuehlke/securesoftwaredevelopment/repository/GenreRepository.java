@@ -31,8 +31,9 @@ public class GenreRepository {
             while (rs.next()) {
                 genreList.add(new Genre(rs.getInt(1), rs.getString(2)));
             }
+            LOG.info("Genres successfully loaded.");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Unsuccessful genre load; SQL exception happened: " + e);
         }
         return genreList;
     }

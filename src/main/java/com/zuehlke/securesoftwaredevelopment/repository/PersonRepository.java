@@ -33,8 +33,9 @@ public class PersonRepository {
             while (rs.next()) {
                 personList.add(createPersonFromResultSet(rs));
             }
+            LOG.info("Get all persons successful");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Get all persons unsuccessful due to SQL exception: " + e);
         }
         return personList;
     }
@@ -49,6 +50,9 @@ public class PersonRepository {
             while (rs.next()) {
                 personList.add(createPersonFromResultSet(rs));
             }
+            LOG.info("Person search successful.");
+        } catch (SQLException e) {
+            LOG.warn("Person search unsuccessful due to SQL exception: " + e);
         }
         return personList;
     }
@@ -61,8 +65,9 @@ public class PersonRepository {
             while (rs.next()) {
                 return createPersonFromResultSet(rs);
             }
+            LOG.info("Get person by id: " + personId + " successful.");
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Get person by id: " + personId + " unsuccessful. Due to SQL exception: " + e);
         }
 
         return null;
@@ -74,8 +79,16 @@ public class PersonRepository {
              Statement statement = connection.createStatement();
         ) {
             statement.executeUpdate(query);
+            AuditLogger.
+                    getAuditLogger(PersonRepository.class)
+                    .auditChange(new Entity(
+                            "person.delete",
+                            String.valueOf(personId),
+                            "existing person with id: " + personId,
+                            "person no longer exists in the database"
+                    ));
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Person delete unsuccessful due to SQL exception: " + e);
         }
     }
 
@@ -89,18 +102,53 @@ public class PersonRepository {
 
     public void update(Person personUpdate) {
         Person personFromDb = get(personUpdate.getId());
-        String query = "UPDATE persons SET firstName = ?, lastName = '" + personUpdate.getLastName() + "', email = ? where id = " + personUpdate.getId();
+        String query = "UPDATE persons SET firstName = ?, lastName = ?, email = ? where id = " + personUpdate.getId();
 
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement(query);
         ) {
             String firstName = personUpdate.getFirstName() != null ? personUpdate.getFirstName() : personFromDb.getFirstName();
+            String lastName = personUpdate.getLastName() != null ? personUpdate.getLastName() : personFromDb.getLastName();
             String email = personUpdate.getEmail() != null ? personUpdate.getEmail() : personFromDb.getEmail();
             statement.setString(1, firstName);
-            statement.setString(2, email);
+            statement.setString(2, lastName);
+            statement.setString(3, email);
             statement.executeUpdate();
+            if (!personFromDb.getFirstName().equals(personUpdate.getFirstName()))
+            {
+                AuditLogger.
+                        getAuditLogger(PersonRepository.class)
+                        .auditChange(new Entity(
+                                "person.updateFirstName",
+                                String.valueOf(personFromDb.getId()),
+                                String.valueOf(personFromDb.getFirstName()),
+                                String.valueOf(personUpdate.getFirstName())
+                        ));
+            }
+            if (!personFromDb.getLastName().equals(personUpdate.getLastName()))
+            {
+                AuditLogger.
+                        getAuditLogger(PersonRepository.class)
+                        .auditChange(new Entity(
+                                "person.updateLastName",
+                                String.valueOf(personFromDb.getId()),
+                                String.valueOf(personFromDb.getLastName()),
+                                String.valueOf(personUpdate.getLastName())
+                        ));
+            }
+            if (!personFromDb.getEmail().equals(personUpdate.getEmail()))
+            {
+                AuditLogger.
+                        getAuditLogger(PersonRepository.class)
+                        .auditChange(new Entity(
+                                "person.updateEmail",
+                                String.valueOf(personFromDb.getId()),
+                                String.valueOf(personFromDb.getEmail()),
+                                String.valueOf(personUpdate.getEmail())
+                        ));
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Person update unsuccessful due to SQL exception: " + e);
         }
     }
 }

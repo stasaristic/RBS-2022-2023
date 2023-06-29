@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      layout:decorate="~{layout}" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      sec:authorize="hasAuthority('CREATE_MOVIE')">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -8,11 +9,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Create form</title>
 </head>
-<body>
+<body sec:authorize="hasAuthority('CREATE_MOVIE')">
 <div layout:fragment="content">
     <h1>Add movie</h1>
     <div class="row">
-        <form class="col-5" method="POST" th:action="@{/movies}">
+        <form class="col-5" method="POST" th:action="@{/movies}" sec:authorize="hasAuthority('CREATE_MOVIE')">
             <div class="form-group">
                 <label for="title">Title</label>
                 <input type="text" id="title" name="title" class="form-control">

@@ -35,8 +35,10 @@ public class PermissionRepository {
                 String name = rs.getString(2);
                 permissions.add(new Permission(id, name));
             }
+            LOG.info("Role successfully found its permissions; role id: " + roleId);
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOG.warn("Find role unsuccessful; role id: " + roleId +
+                    " Due to SQL exception: " + e);
         }
         return permissions;
     }
